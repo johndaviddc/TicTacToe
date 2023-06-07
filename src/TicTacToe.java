@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.*;
 import javax.swing.*;
 import javax.sound.sampled.*;
@@ -11,6 +12,8 @@ public class TicTacToe implements ActionListener {
 	JPanel buttonPanel = new JPanel();
 	JLabel textField = new JLabel();
 	JButton[] buttons = new JButton[9];
+	JButton startButton;
+    JButton saveButton;
 	boolean player1Turn;
 	boolean isGameStarted;
     Clip backgroundMusic;
@@ -52,17 +55,43 @@ public class TicTacToe implements ActionListener {
     		buttons[i].addActionListener(this);
     	}
     	
+    	// Create the start button
+        startButton = new JButton("Start");
+        startButton.setFont(new Font("MV Boli", Font.BOLD, 30));
+        startButton.setFocusable(false);
+        startButton.addActionListener(this);
+        
+        // Create the save button
+        saveButton = new JButton("Save");
+        saveButton.setFont(new Font("MV Boli", Font.BOLD, 30));
+        saveButton.setFocusable(false);
+        saveButton.addActionListener(this);
+        
+        // Add the buttons to the title panel
+        titlePanel.add(startButton, BorderLayout.WEST);
+        titlePanel.add(saveButton, BorderLayout.EAST);
+    	
     	// Add the textField to the title panel and add title panel and button panel to the frame
     	titlePanel.add(textField);
     	frame.add(titlePanel, BorderLayout.NORTH);
     	frame.add(buttonPanel);
     	
-    	// Start the game by determining the first turn
-    	firstTurn();
-    }
+    	isGameStarted = false;
+        loadGame(); // Load the previous saved game if available
+        if (!isGameStarted) {
+        	firstTurn();
+            startGame(); // Start a new game if no saved game is found
+        	}
+    	}
     
     @Override
     public void actionPerformed(ActionEvent e) {
+    	if (e.getSource() == startButton) {
+    		startGame();
+            firstTurn();
+        } else if (e.getSource() == saveButton) {
+            saveGame();
+        } else {
     	// Handle button clicks
     	for (int i = 0; i < 9; i++) {
     		if (e.getSource() == buttons[i]) {
@@ -72,6 +101,7 @@ public class TicTacToe implements ActionListener {
     					buttons[i].setText("X");
     					player1Turn = false;
     					textField.setText("O turn");
+    					saveGame();
     					check();
     				}
     			}
@@ -81,12 +111,28 @@ public class TicTacToe implements ActionListener {
     					buttons[i].setText("O");
     					player1Turn = true;
     					textField.setText("X turn");
+    					saveGame();
     					check();
     				}
     			}
     		}
+    	  }
     	}
     }
+    
+    public void startGame() {
+        player1Turn = false;
+        textField.setText("Press Start to begin");
+        isGameStarted = true;
+
+        // Resetting the board
+        for (int i = 0; i < 9; i++) {
+            buttons[i].setText("");
+            buttons[i].setEnabled(true);
+            buttons[i].setBackground(null);
+        }
+    }
+
     
     public void firstTurn() {
     	// Pause for 2 seconds before determining the first turn
@@ -221,7 +267,33 @@ public class TicTacToe implements ActionListener {
     			) {
     		oWins(2, 4, 6);
     	}
+    	// Check if the board is full or if the game is a tie
+    	boolean isBoardFull = true;
+    	for (int i = 0; i < 9; i++) {
+    		if (buttons[i].getText().isEmpty()) {
+    			isBoardFull = false;
+    			break;
+    		}
+    	}
+    	
+    	if (isBoardFull) {
+    		// Disable all buttons
+    		for (int i = 0; i < 9; i++) {
+    			buttons[i].setEnabled(false);
+    		}
+    		// Update the text field
+    		textField.setText("It's a Tie!");
+    		
+    		// Display tie message using JOptionPane
+            JOptionPane.showMessageDialog(null, "It's a Tie!");
+    		
+    		// Reset the game after a delay of 2 seconds
+            resetGameAfterDelay(2000);
+    	}
     }
+    
+    
+    
     
     public void xWins(int a, int b, int c) {
     	// Highlight the buttons that caused the win
@@ -235,6 +307,13 @@ public class TicTacToe implements ActionListener {
     	}
     	// Update the text field
     	textField.setText("X Wins");
+    	
+    	// Display the winner message using a JOptionPane
+        JOptionPane.showMessageDialog(null, textField.getText());
+    	
+    	// Reset the game after a delay of 2 seconds
+        resetGameAfterDelay(2000);
+    	
     }
     
     public void oWins(int a, int b, int c) {
@@ -249,6 +328,72 @@ public class TicTacToe implements ActionListener {
     	}
     	// Update the text field
     	textField.setText("O Wins");
+    	
+    	// Display the winner message using a JOptionPane
+        JOptionPane.showMessageDialog(null, textField.getText());
+    	
+    	// Reset the game after a delay of 2 seconds
+        resetGameAfterDelay(2000);
+    }
+    
+    
+    private void saveGame() {
+        try (FileOutputStream fileOut = new FileOutputStream("saved_game.ser");
+             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+            String[] buttonValues = new String[9];
+            for (int i = 0; i < 9; i++) {
+                buttonValues[i] = buttons[i].getText();
+            }
+
+            out.writeObject(buttonValues);
+            out.writeBoolean(player1Turn);
+            out.writeBoolean(isGameStarted);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    private void resetGameAfterDelay(int delay) {
+        // Pause for the specified delay before resetting the game
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        // Reset the game
+        for (int i = 0; i < 9; i++) {
+            buttons[i].setText("");
+            buttons[i].setEnabled(true);
+            buttons[i].setBackground(null);
+        }
+        
+        // Start a new game by determining the first turn
+        firstTurn();
+    }
+    
+    
+    private void loadGame() {
+        try (FileInputStream fileIn = new FileInputStream("saved_game.ser");
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+            String[] buttonValues = (String[]) in.readObject();
+
+            for (int i = 0; i < 9; i++) {
+                buttons[i].setText(buttonValues[i]);
+            }
+
+            player1Turn = in.readBoolean();
+            isGameStarted = in.readBoolean();
+            
+            
+            if (player1Turn) {
+                textField.setText("X Turn");
+            } else {
+                textField.setText("O Turn");
+            }
+        } catch (IOException | ClassNotFoundException ex) {
+            ex.printStackTrace();
+        }
     }
 }
     
