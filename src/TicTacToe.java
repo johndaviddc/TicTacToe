@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 import javax.swing.*;
 import javax.sound.sampled.*;
+import java.net.URISyntaxException;
 
 public class TicTacToe implements ActionListener {
 	Random random = new Random();
@@ -82,6 +83,7 @@ public class TicTacToe implements ActionListener {
         	firstTurn();
             startGame(); // Start a new game if no saved game is found
         	}
+        playBackgroundMusic("background_music.wav"); // Play the background music
     	}
     
     @Override
@@ -131,16 +133,27 @@ public class TicTacToe implements ActionListener {
             buttons[i].setEnabled(true);
             buttons[i].setBackground(null);
         }
+        
+        // Show "Tic-Tac-Toe" for 2 seconds before showing the current player's turn
+        textField.setText("Tic-Tac-Toe");
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        firstTurn();
     }
 
     
     public void firstTurn() {
-    	// Pause for 2 seconds before determining the first turn
-    	try {
-    		Thread.sleep(2000);
-    	} catch (InterruptedException e) {
-    		e.printStackTrace();
-    	}
+        // Show "Tic-Tac-Toe" for 2 seconds before showing the current player's turn
+        textField.setText("Tic-Tac-Toe");
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     	// Randomly choose which player goes first
     	if (random.nextInt(2) == 0) {
     		player1Turn = true;
@@ -307,6 +320,7 @@ public class TicTacToe implements ActionListener {
     	}
     	// Update the text field
     	textField.setText("X Wins");
+    	playSound("win_sound.wav"); // Play a sound when X wins
     	
     	// Display the winner message using a JOptionPane
         JOptionPane.showMessageDialog(null, textField.getText());
@@ -328,6 +342,7 @@ public class TicTacToe implements ActionListener {
     	}
     	// Update the text field
     	textField.setText("O Wins");
+    	playSound("win_sound.wav"); // Play a sound when O wins
     	
     	// Display the winner message using a JOptionPane
         JOptionPane.showMessageDialog(null, textField.getText());
@@ -372,6 +387,30 @@ public class TicTacToe implements ActionListener {
         firstTurn();
     }
     
+    public void playSound(String soundFilePath) {
+        try {
+            File soundFile = new File(getClass().getResource(soundFilePath).toURI());
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+            clip.start();
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException | URISyntaxException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void playBackgroundMusic(String musicFilePath) {
+        try {
+            File musicFile = new File(getClass().getResource(musicFilePath).toURI());
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(musicFile);
+            backgroundMusic = AudioSystem.getClip();
+            backgroundMusic.open(audioInputStream);
+            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException | URISyntaxException e) {
+            e.printStackTrace();
+        }
+    }
+    
     
     private void loadGame() {
         try (FileInputStream fileIn = new FileInputStream("saved_game.ser");
@@ -384,6 +423,14 @@ public class TicTacToe implements ActionListener {
 
             player1Turn = in.readBoolean();
             isGameStarted = in.readBoolean();
+            
+            // Show "Tic-Tac-Toe" for 2 seconds before showing the current player's turn
+            textField.setText("Tic-Tac-Toe");
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             
             
             if (player1Turn) {
