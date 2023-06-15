@@ -1,5 +1,7 @@
 # Tic-Tac-Toe Game
-This project is a simple implementation of the classic game Tic-Tac-Toe. It is built using Java and includes a graphical user interface (GUI) using Swing. The game allows two players to take turns and complete against each other to get three of their marks (either 'X' or 'O') in a row, either horizontally, vertically, or diagonally.
+#### Video Demo: https://youtu.be/4Qguwa4qIW0
+
+#### Description: This project is a simple implementation of the classic game Tic-Tac-Toe. It is built using Java and includes a graphical user interface (GUI) using Swing. The game allows two players to take turns and complete against each other to get three of their marks (either 'X' or 'O') in a row, either horizontally, vertically, or diagonally.
 
 ## Getting Started
 To run the Tic-Tac-Toe game, you need to have Java Development Kit (JDK) installed on your machine. Follow these steps to run the game:
